@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interaktives Multicolor-Animiertes Wallpaper</title>
+    <title>Interaktives Animiertes Wallpaper mit Farbwechsel</title>
     <style>
         body {
             margin: 0;
@@ -23,14 +23,14 @@
             padding: 15px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-            width: 200px;
+            width: 250px;
             display: none;
         }
         .control-panel input {
             margin-bottom: 10px;
             width: 100%;
         }
-        .control-panel button {
+        .control-panel select, .control-panel button {
             width: 100%;
             padding: 5px;
             cursor: pointer;
@@ -39,8 +39,8 @@
             color: white;
             border-radius: 5px;
         }
-        .control-panel button:hover {
-            background-color: #0056b3;
+        .control-panel select {
+            margin-bottom: 10px;
         }
         .control-button {
             position: absolute;
@@ -58,10 +58,18 @@
     <canvas id="canvas"></canvas>
     <div class="control-button" onclick="toggleControlPanel()">Einstellungen</div>
     <div class="control-panel">
+        <label for="colorInput">Farbe:</label>
+        <input type="color" id="colorInput" value="#00ffcc">
         <label for="speedInput">Geschwindigkeit:</label>
         <input type="range" id="speedInput" min="1" max="10" value="4">
         <label for="numParticlesInput">Anzahl Partikel:</label>
         <input type="range" id="numParticlesInput" min="5" max="50" value="10">
+        <label for="colorMode">Farbwechselmodus:</label>
+        <select id="colorMode">
+            <option value="linear">Linear</option>
+            <option value="random">Zufällig</option>
+            <option value="circular">Kreisförmig</option>
+        </select>
         <button onclick="applySettings()">Anwenden</button>
     </div>
 
@@ -84,26 +92,34 @@
         }
 
         class Particle {
-            constructor(x, y, speed, numParticles) {
+            constructor(x, y, speed, color, colorMode) {
                 this.x = x;
                 this.y = y;
                 this.size = Math.random() * 5 + 2;
                 this.speedX = (Math.random() - 0.5) * speed;
                 this.speedY = (Math.random() - 0.5) * speed;
-                this.color = getRandomColor(); // Zufällige Farbe für jedes Partikel
+                this.color = color; // Farbe wird hier gesetzt
                 this.initialColor = this.color; // Ursprüngliche Farbe speichern
+                this.colorMode = colorMode; // Farbwechselmodus speichern
+                this.colorChangeStep = 0; // Für Farbwechselmodi
             }
             update() {
                 this.x += this.speedX;
                 this.y += this.speedY;
 
-                // Ändere die Farbe des Partikels allmählich
-                const colorStep = 10; // Geschwindigkeit der Farbänderung
-                let colorChange = Math.floor(Math.random() * 6);
-                let newColor = this.color.substring(1); // Entferne "#"
-                newColor = newColor.split("");
-                newColor[colorChange] = (parseInt(newColor[colorChange], 16) + colorStep) % 16;
-                this.color = "#" + newColor.join("");
+                // Farbwechselmodi
+                if (this.colorMode === "linear") {
+                    // Linearer Farbwechsel
+                    this.colorChangeStep = (this.colorChangeStep + 1) % 360;
+                    this.color = `hsl(${this.colorChangeStep}, 100%, 50%)`;
+                } else if (this.colorMode === "random") {
+                    // Zufälliger Farbwechsel
+                    this.color = getRandomColor();
+                } else if (this.colorMode === "circular") {
+                    // Kreisförmiger Farbwechsel
+                    this.colorChangeStep = (this.colorChangeStep + 1) % 360;
+                    this.color = `hsl(${(this.colorChangeStep + Math.random() * 180) % 360}, 100%, 50%)`;
+                }
 
                 if (this.x > canvas.width || this.x < 0) this.speedX *= -1;
                 if (this.y > canvas.height || this.y < 0) this.speedY *= -1;
@@ -118,10 +134,10 @@
         }
 
         // Funktion zum Erstellen einer neuen Partikelgruppe
-        function createParticleGroup(x, y, numParticles, speed) {
+        function createParticleGroup(x, y, numParticles, speed, color, colorMode) {
             let particles = [];
             for (let i = 0; i < numParticles; i++) {
-                particles.push(new Particle(x, y, speed, numParticles));
+                particles.push(new Particle(x, y, speed, color, colorMode));
             }
             return particles;
         }
@@ -130,7 +146,9 @@
         function initParticles(x, y) {
             const numParticles = document.getElementById("numParticlesInput").value;
             const speed = document.getElementById("speedInput").value;
-            particleGroups.push(createParticleGroup(x, y, numParticles, speed));
+            const color = document.getElementById("colorInput").value;
+            const colorMode = document.getElementById("colorMode").value;
+            particleGroups.push(createParticleGroup(x, y, numParticles, speed, color, colorMode));
         }
 
         // Animationsfunktion
