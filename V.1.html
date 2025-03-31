@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interaktives Animiertes Wallpaper</title>
+    <title>Interaktives Multicolor-Animiertes Wallpaper</title>
     <style>
         body {
             margin: 0;
@@ -58,8 +58,6 @@
     <canvas id="canvas"></canvas>
     <div class="control-button" onclick="toggleControlPanel()">Einstellungen</div>
     <div class="control-panel">
-        <label for="colorInput">Farbe:</label>
-        <input type="color" id="colorInput" value="#00ffcc">
         <label for="speedInput">Geschwindigkeit:</label>
         <input type="range" id="speedInput" min="1" max="10" value="4">
         <label for="numParticlesInput">Anzahl Partikel:</label>
@@ -75,9 +73,14 @@
 
         let particleGroups = [];
 
-        // Funktion zum Abrufen einer zufälligen Farbe
+        // Zufällige Farben generieren
         function getRandomColor() {
-            return document.getElementById("colorInput").value;
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
         }
 
         class Particle {
@@ -87,11 +90,20 @@
                 this.size = Math.random() * 5 + 2;
                 this.speedX = (Math.random() - 0.5) * speed;
                 this.speedY = (Math.random() - 0.5) * speed;
-                this.color = getRandomColor();
+                this.color = getRandomColor(); // Zufällige Farbe für jedes Partikel
+                this.initialColor = this.color; // Ursprüngliche Farbe speichern
             }
             update() {
                 this.x += this.speedX;
                 this.y += this.speedY;
+
+                // Ändere die Farbe des Partikels allmählich
+                const colorStep = 10; // Geschwindigkeit der Farbänderung
+                let colorChange = Math.floor(Math.random() * 6);
+                let newColor = this.color.substring(1); // Entferne "#"
+                newColor = newColor.split("");
+                newColor[colorChange] = (parseInt(newColor[colorChange], 16) + colorStep) % 16;
+                this.color = "#" + newColor.join("");
 
                 if (this.x > canvas.width || this.x < 0) this.speedX *= -1;
                 if (this.y > canvas.height || this.y < 0) this.speedY *= -1;
