@@ -73,23 +73,20 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        let particles = [];
-        let numParticles = 10;
-        let particleSpeed = 4;
-        let particleColor = '#00ffcc';
+        let particleGroups = [];
 
         // Funktion zum Abrufen einer zufälligen Farbe
         function getRandomColor() {
-            return particleColor; // Verwendet die benutzerdefinierte Farbe
+            return document.getElementById("colorInput").value;
         }
 
         class Particle {
-            constructor(x, y) {
+            constructor(x, y, speed, numParticles) {
                 this.x = x;
                 this.y = y;
                 this.size = Math.random() * 5 + 2;
-                this.speedX = (Math.random() - 0.5) * particleSpeed;
-                this.speedY = (Math.random() - 0.5) * particleSpeed;
+                this.speedX = (Math.random() - 0.5) * speed;
+                this.speedY = (Math.random() - 0.5) * speed;
                 this.color = getRandomColor();
             }
             update() {
@@ -108,18 +105,34 @@
             }
         }
 
-        function initParticles(x, y) {
+        // Funktion zum Erstellen einer neuen Partikelgruppe
+        function createParticleGroup(x, y, numParticles, speed) {
+            let particles = [];
             for (let i = 0; i < numParticles; i++) {
-                particles.push(new Particle(x, y));
+                particles.push(new Particle(x, y, speed, numParticles));
             }
+            return particles;
         }
 
+        // Funktion zum Hinzufügen von Partikeln
+        function initParticles(x, y) {
+            const numParticles = document.getElementById("numParticlesInput").value;
+            const speed = document.getElementById("speedInput").value;
+            particleGroups.push(createParticleGroup(x, y, numParticles, speed));
+        }
+
+        // Animationsfunktion
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach(particle => {
-                particle.update();
-                particle.draw();
+
+            // Alle Gruppen animieren
+            particleGroups.forEach(group => {
+                group.forEach(particle => {
+                    particle.update();
+                    particle.draw();
+                });
             });
+
             requestAnimationFrame(animate);
         }
 
@@ -130,10 +143,7 @@
 
         // Einstellungen anwenden
         function applySettings() {
-            particleColor = document.getElementById("colorInput").value;
-            particleSpeed = document.getElementById("speedInput").value;
-            numParticles = document.getElementById("numParticlesInput").value;
-            particles = []; // Lösche alle bestehenden Partikel
+            particleGroups = []; // Lösche alle bestehenden Partikelgruppen
         }
 
         // Steuerpanel ein- und ausblenden
